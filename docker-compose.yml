@@ -10,10 +10,11 @@ services:
       DATABASE_URL: postgresql://admin:Salcifufu@0412@10.0.0.13:5432/teste
       DEBUG: false
     ports:
-      - "8000:8000"
+      - "8001:8000"
     volumes:
       - ./backend:/app
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
     networks:
       - cadastro-network
 
@@ -23,11 +24,12 @@ services:
       dockerfile: Dockerfile
     container_name: cadastro-frontend
     ports:
-      - "3000:80"
+      - "3001:80"
     depends_on:
       - backend
     volumes:
       - ./frontend:/app
+    restart: unless-stopped
     networks:
       - cadastro-network
 
