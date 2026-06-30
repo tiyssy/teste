@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Cadastro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+        }
+
+        .form-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .list-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .list-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .search-box {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-box input {
+            flex: 1;
+        }
+
+        .search-box button {
+            width: auto;
+            padding: 10px 20px;
+        }
+
+        .usuarios-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .usuarios-table thead {
+            background: #f5f5f5;
+        }
+
+        .usuarios-table th {
+            padding: 12px;
+            text-align: left;
+            color: #333;
+            font-weight: 600;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .usuarios-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .usuarios-table tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-edit {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #45a049;
+        }
+
+        .btn-delete {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #da190b;
+        }
+
+        .btn-view {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: #0b7dda;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            width: auto;
+            padding: 0;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .usuarios-table {
+                font-size: 12px;
+            }
+
+            .usuarios-table th, .usuarios-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📋 Sistema de Cadastro de Usuários</h1>
+            <p>Aplicação completa com banco de dados PostgreSQL e Docker</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Formulário -->
+            <div class="form-section">
+                <h2>Novo Cadastro</h2>
+                <div id="formMessage" class="message"></div>
+                <form id="cadastroForm">
+                    <div class="form-group">
+                        <label for="nome">Nome *</label>
+                        <input type="text" id="nome" name="nome" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="telefone">Telefone</label>
+                        <input type="tel" id="telefone" name="telefone" placeholder="(11) 98765-4321">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dataNascimento">Data de Nascimento</label>
+                        <input type="date" id="dataNascimento" name="data_nascimento">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="endereco">Endereço</label>
+                        <input type="text" id="endereco" name="endereco" placeholder="Rua, número">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cidade">Cidade</label>
+                        <input type="text" id="cidade" name="cidade">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="estado">Estado</label>
+                        <select id="estado" name="estado">
+                            <option value="">Selecione...</option>
+                            <option value="SP">São Paulo</option>
+                            <option value="RJ">Rio de Janeiro</option>
+                            <option value="MG">Minas Gerais</option>
+                            <option value="BA">Bahia</option>
+                            <option value="RS">Rio Grande do Sul</option>
+                            <option value="PR">Paraná</option>
+                            <option value="PE">Pernambuco</option>
+                            <option value="CE">Ceará</option>
+                            <option value="PA">Pará</option>
+                            <option value="SC">Santa Catarina</option>
+                            <option value="GO">Goiás</option>
+                            <option value="PB">Paraíba</option>
+                            <option value="MA">Maranhão</option>
+                            <option value="ES">Espírito Santo</option>
+                            <option value="PI">Piauí</option>
+                            <option value="RN">Rio Grande do Norte</option>
+                            <option value="AL">Alagoas</option>
+                            <option value="MT">Mato Grosso</option>
+                            <option value="DF">Distrito Federal</option>
+                            <option value="MS">Mato Grosso do Sul</option>
+                            <option value="AC">Acre</option>
+                            <option value="AM">Amazonas</option>
+                            <option value="AP">Amapá</option>
+                            <option value="RO">Rondônia</option>
+                            <option value="RR">Roraima</option>
+                            <option value="TO">Tocantins</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cep">CEP</label>
+                        <input type="text" id="cep" name="cep" placeholder="01310-100">
+                    </div>
+
+                    <button type="submit">Cadastrar Usuário</button>
+                </form>
+            </div>
+
+            <!-- Lista de Usuários -->
+            <div class="list-section">
+                <h2>Usuários Cadastrados</h2>
+                <div id="listMessage" class="message"></div>
+                
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Buscar por nome...">
+                    <button onclick="buscarUsuarios()">Buscar</button>
+                </div>
+
+                <div id="usuariosContainer">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Carregando usuários...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes -->
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Detalhes do Usuário</h2>
+                <button class="close-btn" onclick="fecharModal()">&times;</button>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Modal de Edição -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Editar Usuário</h2>
+                <button class="close-btn" onclick="fecharEditModal()">&times;</button>
+            </div>
+            <form id="editForm">
+                <div class="form-group">
+                    <label for="editNome">Nome</label>
+                    <input type="text" id="editNome" name="nome">
+                </div>
+                <div class="form-group">
+                    <label for="editEmail">Email</label>
+                    <input type="email" id="editEmail" name="email">
+                </div>
+                <div class="form-group">
+                    <label for="editTelefone">Telefone</label>
+                    <input type="tel" id="editTelefone" name="telefone">
+                </div>
+                <div class="form-group">
+                    <label for="editDataNascimento">Data de Nascimento</label>
+                    <input type="date" id="editDataNascimento" name="data_nascimento">
+                </div>
+                <div class="form-group">
+                    <label for="editEndereco">Endereço</label>
+                    <input type="text" id="editEndereco" name="endereco">
+                </div>
+                <div class="form-group">
+                    <label for="editCidade">Cidade</label>
+                    <input type="text" id="editCidade" name="cidade">
+                </div>
+                <div class="form-group">
+                    <label for="editEstado">Estado</label>
+                    <select id="editEstado" name="estado">
+                        <option value="">Selecione...</option>
+                        <option value="SP">São Paulo</option>
+                        <option value="RJ">Rio de Janeiro</option>
+                        <option value="MG">Minas Gerais</option>
+                        <option value="BA">Bahia</option>
+                        <option value="RS">Rio Grande do Sul</option>
+                        <option value="PR">Paraná</option>
+                        <option value="PE">Pernambuco</option>
+                        <option value="CE">Ceará</option>
+                        <option value="PA">Pará</option>
+                        <option value="SC">Santa Catarina</option>
+                        <option value="GO">Goiás</option>
+                        <option value="PB">Paraíba</option>
+                        <option value="MA">Maranhão</option>
+                        <option value="ES">Espírito Santo</option>
+                        <option value="PI">Piauí</option>
+                        <option value="RN">Rio Grande do Norte</option>
+                        <option value="AL">Alagoas</option>
+                        <option value="MT">Mato Grosso</option>
+                        <option value="DF">Distrito Federal</option>
+                        <option value="MS">Mato Grosso do Sul</option>
+                        <option value="AC">Acre</option>
+                        <option value="AM">Amazonas</option>
+                        <option value="AP">Amapá</option>
+                        <option value="RO">Rondônia</option>
+                        <option value="RR">Roraima</option>
+                        <option value="TO">Tocantins</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editCep">CEP</label>
+                    <input type="text" id="editCep" name="cep">
+                </div>
+                <button type="submit">Salvar Alterações</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+        let usuarioEmEdicao = null;
+
+        // Carregar usuários ao iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            carregarUsuarios();
+        });
+
+        // Formulário de cadastro
+        document.getElementById('cadastroForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const dados = {
+                nome: formData.get('nome'),
+                email: formData.get('email'),
+                telefone: formData.get('telefone') || null,
+                data_nascimento: formData.get('data_nascimento') || null,
+                endereco: formData.get('endereco') || null,
+                cidade: formData.get('cidade') || null,
+                estado: formData.get('estado') || null,
+                cep: formData.get('cep') || null
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/usuarios`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dados)
+                });
+
+                const messageDiv = document.getElementById('formMessage');
+                
+                if (response.ok) {
+                    messageDiv.textContent = '✓ Usuário cadastrado com sucesso!';
+                    messageDiv.className = 'message success';
+                    e.target.reset();
+                    carregarUsuarios();
+                    
+                    setTimeout(() => {
+                        messageDiv.className = 'message';
+                    }, 3000);
+                } else {
+                    const erro = await response.json();
+                    messageDiv.textContent = `✗ Erro: ${erro.detail || 'Falha ao cadastrar'}`;
+                    messageDiv.className = 'message error';
+                }
+            } catch (erro) {
+                const messageDiv = document.getElementById('formMessage');
+                messageDiv.textContent = `✗ Erro de conexão: ${erro.message}`;
+                messageDiv.className = 'message error';
+            }
+        });
+
+        // Carregar usuários
+        async function carregarUsuarios() {
+            try {
+                const response = await fetch(`${API_URL}/usuarios?limit=100`);
+                const usuarios = await response.json();
+                
+                const container = document.getElementById('usuariosContainer');
+                
+                if (usuarios.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><p>Nenhum usuário cadastrado ainda.</p></div>';
+                    return;
+                }
+
+                let html = '<table class="usuarios-table"><thead><tr><th>ID</th><th>Nome</th><th>Email</th><th>Telefone</th><th>Cidade</th><th>Ações</th></tr></thead><tbody>';
+                
+                usuarios.forEach(usuario => {
+                    html += `
+                        <tr>
+                            <td>${usuario.id}</td>
+                            <td>${usuario.nome}</td>
+                            <td>${usuario.email}</td>
+                            <td>${usuario.telefone || '-'}</td>
+                            <td>${usuario.cidade || '-'}</td>
+                            <td class="action-buttons">
+                                <button class="btn-small btn-view" onclick="verDetalhes(${usuario.id})">Ver</button>
+                                <button class="btn-small btn-edit" onclick="abrirEdicao(${usuario.id})">Editar</button>
+                                <button class="btn-small btn-delete" onclick="deletarUsuario(${usuario.id})">Deletar</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch (erro) {
+                const container = document.getElementById('usuariosContainer');
+                container.innerHTML = `<div class="empty-state"><p>Erro ao carregar usuários: ${erro.message}</p></div>`;
+            }
+        }
+
+        // Buscar usuários
+        async function buscarUsuarios() {
+            const termo = document.getElementById('searchInput').value;
+            
+            if (!termo.trim()) {
+                carregarUsuarios();
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/usuarios/search/por-nome?nome=${encodeURIComponent(termo)}`);
+                const usuarios = await response.json();
+                
+                const container = document.getElementById('usuariosContainer');
+                
+                if (usuarios.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><p>Nenhum usuário encontrado.</p></div>';
+                    return;
+                }
+
+                let html = '<table class="usuarios-table"><thead><tr><th>ID</th><th>Nome</th><th>Email</th><th>Telefone</th><th>Cidade</th><th>Ações</th></tr></thead><tbody>';
+                
+                usuarios.forEach(usuario => {
+                    html += `
+                        <tr>
+                            <td>${usuario.id}</td>
+                            <td>${usuario.nome}</td>
+                            <td>${usuario.email}</td>
+                            <td>${usuario.telefone || '-'}</td>
+                            <td>${usuario.cidade || '-'}</td>
+                            <td class="action-buttons">
+                                <button class="btn-small btn-view" onclick="verDetalhes(${usuario.id})">Ver</button>
+                                <button class="btn-small btn-edit" onclick="abrirEdicao(${usuario.id})">Editar</button>
+                                <button class="btn-small btn-delete" onclick="deletarUsuario(${usuario.id})">Deletar</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } catch (erro) {
+                const container = document.getElementById('usuariosContainer');
+                container.innerHTML = `<div class="empty-state"><p>Erro ao buscar: ${erro.message}</p></div>`;
+            }
+        }
+
+        // Ver detalhes
+        async function verDetalhes(id) {
+            try {
+                const response = await fetch(`${API_URL}/usuarios/${id}`);
+                const usuario = await response.json();
+                
+                const logsResponse = await fetch(`${API_URL}/usuarios/${id}/logs`);
+                const logs = await logsResponse.json();
+                
+                let html = `
+                    <div style="margin-bottom: 20px;">
+                        <p><strong>ID:</strong> ${usuario.id}</p>
+                        <p><strong>Nome:</strong> ${usuario.nome}</p>
+                        <p><strong>Email:</strong> ${usuario.email}</p>
+                        <p><strong>Telefone:</strong> ${usuario.telefone || '-'}</p>
+                        <p><strong>Data de Nascimento:</strong> ${usuario.data_nascimento ? new Date(usuario.data_nascimento).toLocaleDateString('pt-BR') : '-'}</p>
+                        <p><strong>Endereço:</strong> ${usuario.endereco || '-'}</p>
+                        <p><strong>Cidade:</strong> ${usuario.cidade || '-'}</p>
+                        <p><strong>Estado:</strong> ${usuario.estado || '-'}</p>
+                        <p><strong>CEP:</strong> ${usuario.cep || '-'}</p>
+                        <p><strong>Cadastrado em:</strong> ${new Date(usuario.data_criacao).toLocaleString('pt-BR')}</p>
+                        <p><strong>Atualizado em:</strong> ${new Date(usuario.data_atualizacao).toLocaleString('pt-BR')}</p>
+                    </div>
+                `;
+                
+                if (logs.length > 0) {
+                    html += '<h3 style="margin-top: 20px; margin-bottom: 10px;">Histórico de Atividades</h3>';
+                    html += '<ul style="margin-left: 20px;">';
+                    logs.forEach(log => {
+                        html += `<li>${log.acao} - ${log.descricao || ''} (${new Date(log.data_acao).toLocaleString('pt-BR')})</li>`;
+                    });
+                    html += '</ul>';
+                }
+                
+                document.getElementById('modalBody').innerHTML = html;
+                document.getElementById('detailsModal').classList.add('active');
+            } catch (erro) {
+                alert('Erro ao carregar detalhes: ' + erro.message);
+            }
+        }
+
+        // Abrir edição
+        async function abrirEdicao(id) {
+            try {
+                const response = await fetch(`${API_URL}/usuarios/${id}`);
+                const usuario = await response.json();
+                
+                usuarioEmEdicao = usuario.id;
+                document.getElementById('editNome').value = usuario.nome;
+                document.getElementById('editEmail').value = usuario.email;
+                document.getElementById('editTelefone').value = usuario.telefone || '';
+                document.getElementById('editDataNascimento').value = usuario.data_nascimento || '';
+                document.getElementById('editEndereco').value = usuario.endereco || '';
+                document.getElementById('editCidade').value = usuario.cidade || '';
+                document.getElementById('editEstado').value = usuario.estado || '';
+                document.getElementById('editCep').value = usuario.cep || '';
+                
+                document.getElementById('editModal').classList.add('active');
+            } catch (erro) {
+                alert('Erro ao carregar usuário: ' + erro.message);
+            }
+        }
+
+        // Salvar edição
+        document.getElementById('editForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const dados = {
+                nome: formData.get('nome'),
+                email: formData.get('email'),
+                telefone: formData.get('telefone') || null,
+                data_nascimento: formData.get('data_nascimento') || null,
+                endereco: formData.get('endereco') || null,
+                cidade: formData.get('cidade') || null,
+                estado: formData.get('estado') || null,
+                cep: formData.get('cep') || null
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/usuarios/${usuarioEmEdicao}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dados)
+                });
+
+                if (response.ok) {
+                    alert('✓ Usuário atualizado com sucesso!');
+                    fecharEditModal();
+                    carregarUsuarios();
+                } else {
+                    const erro = await response.json();
+                    alert(`✗ Erro: ${erro.detail || 'Falha ao atualizar'}`);
+                }
+            } catch (erro) {
+                alert(`✗ Erro de conexão: ${erro.message}`);
+            }
+        });
+
+        // Deletar usuário
+        async function deletarUsuario(id) {
+            if (!confirm('Tem certeza que deseja deletar este usuário?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/usuarios/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('✓ Usuário deletado com sucesso!');
+                    carregarUsuarios();
+                } else {
+                    alert('✗ Erro ao deletar usuário');
+                }
+            } catch (erro) {
+                alert(`✗ Erro de conexão: ${erro.message}`);
+            }
+        }
+
+        // Fechar modais
+        function fecharModal() {
+            document.getElementById('detailsModal').classList.remove('active');
+        }
+
+        function fecharEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        // Fechar modal ao clicar fora
+        window.addEventListener('click', (e) => {
+            const detailsModal = document.getElementById('detailsModal');
+            const editModal = document.getElementById('editModal');
+            
+            if (e.target === detailsModal) {
+                fecharModal();
+            }
+            if (e.target === editModal) {
+                fecharEditModal();
+            }
+        });
+    </script>
+</body>
+</html>

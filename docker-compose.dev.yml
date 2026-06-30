@@ -1,0 +1,64 @@
+version: '3.8'
+
+# Configuração alternativa para desenvolvimento com hot-reload
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: cadastro-postgres-dev
+    environment:
+      POSTGRES_USER: ${DB_USER:-cadastro}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-senha123}
+      POSTGRES_DB: ${DB_NAME:-cadastro_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-cadastro}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cadastro-network-dev
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cadastro-backend-dev
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-cadastro}:${DB_PASSWORD:-senha123}@postgres:5432/${DB_NAME:-cadastro_db}
+      DEBUG: "true"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - cadastro-network-dev
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cadastro-frontend-dev
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+    networks:
+      - cadastro-network-dev
+
+volumes:
+  postgres_data_dev:
+
+networks:
+  cadastro-network-dev:
+    driver: bridge
