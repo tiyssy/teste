@@ -1,428 +1,126 @@
-# Sistema de Cadastro com Docker e PostgreSQL
+# Horas Adicionais
 
-Aplicação completa de cadastro de usuários com backend FastAPI, frontend HTML/CSS/JS e banco de dados PostgreSQL, totalmente containerizada com Docker.
+Sistema interno para lançamento e aprovação de horas adicionais/atividades de campo,
+com fluxo de aprovação em duas etapas (**PMO → Gestão**).
 
-## 📋 Características
+> Este projeto foi reconstruído a partir do schema de banco encontrado em um export
+> parcial do Manus.app. O export não trazia as telas nem o CSS originais, então o
+> visual aqui é uma proposta nova (paleta petróleo/âmbar, tipografia IBM Plex),
+> não uma cópia pixel-a-pixel do app original. Se você tiver screenshots do sistema
+> antigo, me envie para eu ajustar o visual.
 
-- **Backend**: FastAPI com Python 3.11
-- **Banco de Dados**: PostgreSQL 15
-- **Frontend**: HTML5, CSS3 e JavaScript vanilla
-- **Containerização**: Docker e Docker Compose
-- **API RESTful**: Endpoints completos para CRUD
-- **Autenticação**: Pronta para integração
-- **Responsivo**: Interface adaptável para mobile
+## Stack
 
-## 🚀 Pré-requisitos
+- **Frontend**: React + Vite + TypeScript + Tailwind + shadcn/ui
+- **Backend**: Node.js + Express + TypeScript + Drizzle ORM
+- **Banco**: PostgreSQL
+- **Auth**: JWT em cookie httpOnly + bcrypt
+- **Deploy**: Docker + Docker Compose, pronto para stack no Portainer
+- **CI**: GitHub Actions publicando imagens no GitHub Container Registry (GHCR)
 
-- Docker (versão 20.10+)
-- Docker Compose (versão 2.0+)
-- Git (opcional)
+## Papéis de usuário
 
-## 📦 Estrutura do Projeto
+| Grupo      | Pode fazer |
+|------------|------------|
+| `operacao` | Criar, editar e enviar atividades para aprovação |
+| `pmo`      | Dar a 1ª aprovação; criar/editar projetos |
+| `gestao`   | Dar a 2ª aprovação (após o PMO); gerenciar dias bloqueados |
+| `admin`    | Tudo, incluindo gestão de usuários |
 
-```
-cadastro-app/
-├── backend/
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   ├── main.py              # Aplicação FastAPI
-│   ├── config.py            # Configurações
-│   ├── database.py          # Conexão com BD
-│   ├── models.py            # Modelos SQLAlchemy
-│   └── schemas.py           # Schemas Pydantic
-├── frontend/
-│   ├── Dockerfile
-│   ├── package.json
-│   ├── nginx.conf
-│   └── index.html           # Interface web
-├── database/
-│   └── init.sql             # Script de inicialização
-├── docker-compose.yml       # Orquestração de containers
-├── .env                     # Variáveis de ambiente
-├── .env.example             # Exemplo de .env
-├── .gitignore
-└── README.md
-```
+Fluxo de status da atividade: `pendente` → `aguardando_aprovacao` → (`aprovada` | `rejeitada`).
 
-## 🔧 Instalação e Execução
+## Rodando localmente (sem Docker)
 
-### 1. Clonar ou Extrair o Projeto
-
-```bash
-# Se estiver em um arquivo compactado
-unzip cadastro-app.zip
-cd cadastro-app
-```
-
-### 2. Configurar Variáveis de Ambiente
-
-O arquivo `.env` já está configurado com valores padrão:
-
-```bash
-# Opcional: Copiar do exemplo
-cp .env.example .env
-```
-
-**Valores padrão:**
-- DB_USER: `cadastro`
-- DB_PASSWORD: `senha123`
-- DB_NAME: `cadastro_db`
-- DB_HOST: `postgres`
-- DB_PORT: `5432`
-
-### 3. Iniciar os Containers
-
-```bash
-# Construir e iniciar todos os serviços
-docker-compose up -d
-
-# Ou com rebuild
-docker-compose up -d --build
-```
-
-### 4. Verificar Status
-
-```bash
-# Ver status dos containers
-docker-compose ps
-
-# Ver logs
-docker-compose logs -f
-
-# Ver logs de um serviço específico
-docker-compose logs -f backend
-docker-compose logs -f postgres
-docker-compose logs -f frontend
-```
-
-## 🌐 Acessar a Aplicação
-
-Após iniciar os containers, acesse:
-
-- **Frontend**: http://localhost:3000
-- **API Backend**: http://localhost:8000
-- **Documentação API**: http://localhost:8000/docs
-- **Banco de Dados**: localhost:5432
-
-## 📊 Banco de Dados
-
-### Conectar ao PostgreSQL
-
-```bash
-# Usar psql
-docker-compose exec postgres psql -U cadastro -d cadastro_db
-
-# Ou via ferramenta GUI (DBeaver, pgAdmin, etc.)
-# Host: localhost
-# Port: 5432
-# User: cadastro
-# Password: senha123
-# Database: cadastro_db
-```
-
-### Tabelas Criadas
-
-#### usuarios
-```sql
-- id (PK)
-- nome
-- email (UNIQUE)
-- telefone
-- data_nascimento
-- endereco
-- cidade
-- estado
-- cep
-- data_criacao
-- data_atualizacao
-```
-
-#### logs
-```sql
-- id (PK)
-- usuario_id (FK)
-- acao
-- descricao
-- data_acao
-```
-
-## 🔌 Endpoints da API
-
-### Usuários
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| GET | `/api/usuarios` | Listar todos os usuários |
-| GET | `/api/usuarios/{id}` | Obter detalhes de um usuário |
-| POST | `/api/usuarios` | Criar novo usuário |
-| PUT | `/api/usuarios/{id}` | Atualizar usuário |
-| DELETE | `/api/usuarios/{id}` | Deletar usuário |
-| GET | `/api/usuarios/{id}/logs` | Obter histórico de um usuário |
-
-### Busca
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| GET | `/api/usuarios/search/por-email?email=...` | Buscar por email |
-| GET | `/api/usuarios/search/por-nome?nome=...` | Buscar por nome |
-
-### Health
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| GET | `/` | Status da API |
-| GET | `/health` | Health check |
-
-## 📝 Exemplos de Uso
-
-### Criar Usuário
-
-```bash
-curl -X POST http://localhost:8000/api/usuarios \
-  -H "Content-Type: application/json" \
-  -d '{
-    "nome": "João Silva",
-    "email": "joao@example.com",
-    "telefone": "(11) 98765-4321",
-    "data_nascimento": "1990-05-15",
-    "endereco": "Rua A, 123",
-    "cidade": "São Paulo",
-    "estado": "SP",
-    "cep": "01310-100"
-  }'
-```
-
-### Listar Usuários
-
-```bash
-curl http://localhost:8000/api/usuarios
-```
-
-### Buscar por Email
-
-```bash
-curl http://localhost:8000/api/usuarios/search/por-email?email=joao@example.com
-```
-
-### Atualizar Usuário
-
-```bash
-curl -X PUT http://localhost:8000/api/usuarios/1 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "telefone": "(11) 99999-9999"
-  }'
-```
-
-### Deletar Usuário
-
-```bash
-curl -X DELETE http://localhost:8000/api/usuarios/1
-```
-
-## 🛑 Parar os Containers
-
-```bash
-# Parar todos os serviços
-docker-compose down
-
-# Parar e remover volumes (cuidado: deleta dados!)
-docker-compose down -v
-
-# Parar apenas um serviço
-docker-compose stop backend
-```
-
-## 🔄 Reiniciar Serviços
-
-```bash
-# Reiniciar todos
-docker-compose restart
-
-# Reiniciar um específico
-docker-compose restart backend
-```
-
-## 🐛 Troubleshooting
-
-### Erro: "Connection refused"
-
-```bash
-# Verificar se os containers estão rodando
-docker-compose ps
-
-# Verificar logs
-docker-compose logs postgres
-docker-compose logs backend
-```
-
-### Erro: "Port already in use"
-
-```bash
-# Mudar as portas no docker-compose.yml
-# Ou parar o serviço que está usando a porta
-
-# Encontrar qual processo está usando a porta
-lsof -i :3000
-lsof -i :8000
-lsof -i :5432
-
-# Matar o processo
-kill -9 <PID>
-```
-
-### Banco de dados não conecta
-
-```bash
-# Verificar se o PostgreSQL está saudável
-docker-compose exec postgres pg_isready -U cadastro
-
-# Ver logs do PostgreSQL
-docker-compose logs postgres
-
-# Reiniciar o PostgreSQL
-docker-compose restart postgres
-```
-
-### Frontend não carrega a API
-
-```bash
-# Verificar se o backend está rodando
-docker-compose logs backend
-
-# Testar conexão com a API
-curl http://localhost:8000/health
-
-# Verificar configuração do nginx
-docker-compose exec frontend cat /etc/nginx/conf.d/default.conf
-```
-
-## 📈 Monitoramento
-
-### Ver uso de recursos
-
-```bash
-docker stats
-```
-
-### Ver logs em tempo real
-
-```bash
-docker-compose logs -f
-```
-
-### Acessar shell de um container
+Pré-requisitos: Node 20+, PostgreSQL rodando localmente.
 
 ```bash
 # Backend
-docker-compose exec backend bash
+cd server
+cp .env.example .env      # edite DATABASE_URL e JWT_SECRET
+npm install
+npm run db:generate       # gera as migrations a partir do schema
+npm run db:migrate        # aplica as migrations no banco
+npm run db:seed           # cria o usuário admin inicial
+npm run dev                # http://localhost:4000
 
-# PostgreSQL
-docker-compose exec postgres bash
-
-# Frontend
-docker-compose exec frontend sh
+# Frontend (em outro terminal)
+cd client
+npm install
+npm run dev                # http://localhost:5173
 ```
 
-## 🔐 Segurança
+Login inicial (definido no seed): `admin@empresa.com.br` / `admin123` — troque a senha
+em produção via variáveis `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`.
 
-### Alterar Senha do Banco
-
-1. Editar `.env`:
-```bash
-DB_PASSWORD=sua_senha_segura
-```
-
-2. Remover volume antigo:
-```bash
-docker-compose down -v
-```
-
-3. Reiniciar:
-```bash
-docker-compose up -d
-```
-
-### Variáveis de Ambiente em Produção
+## Rodando com Docker Compose (local)
 
 ```bash
-# Criar arquivo .env.production
-DB_USER=usuario_seguro
-DB_PASSWORD=senha_muito_segura_123!@#
-DB_NAME=cadastro_prod
-DEBUG=false
-ENVIRONMENT=production
+cp .env.example .env       # edite as senhas e o JWT_SECRET
+docker compose up --build
 ```
 
-## 🚀 Deploy em Produção
+O frontend fica em `http://localhost:8080` (proxying `/api` para o backend).
 
-### Usando Portainer
-
-1. Acesse Portainer
-2. Vá para Stacks
-3. Clique em "Add Stack"
-4. Cole o conteúdo do `docker-compose.yml`
-5. Configure as variáveis de ambiente
-6. Deploy
-
-### Usando Docker Swarm
+**Importante:** antes do primeiro uso, gere as migrations do Drizzle localmente
+(`cd server && npm install && npm run db:generate`) e faça commit da pasta
+`server/drizzle/` no repositório — é ela que o container do backend aplica ao subir.
+Depois do primeiro `docker compose up`, rode o seed uma vez:
 
 ```bash
-docker stack deploy -c docker-compose.yml cadastro
+docker compose exec server node dist/seed.js
 ```
 
-### Usando Kubernetes
+## Publicando no GitHub
 
 ```bash
-# Converter para Kubernetes
-kompose convert -f docker-compose.yml
-
-# Deploy
-kubectl apply -f .
+git init
+git add .
+git commit -m "Sistema de horas adicionais"
+git branch -M main
+git remote add origin https://github.com/SEU-USUARIO/horas-adicionais.git
+git push -u origin main
 ```
 
-## 📚 Documentação Adicional
+O workflow em `.github/workflows/docker-publish.yml` já está configurado para, a cada
+push na `main`, buildar e publicar as imagens `ghcr.io/SEU-USUARIO/horas-adicionais-server`
+e `...-client`. Não precisa configurar nada — ele usa o `GITHUB_TOKEN` automático do
+Actions. Se o pacote GHCR ficar privado, torne-o público em
+**GitHub → seu perfil → Packages** ou dê permissão ao Portainer para autenticar no GHCR.
 
-- [FastAPI Docs](https://fastapi.tiangolo.com/)
-- [SQLAlchemy Docs](https://docs.sqlalchemy.org/)
-- [PostgreSQL Docs](https://www.postgresql.org/docs/)
-- [Docker Compose Docs](https://docs.docker.com/compose/)
+## Deploy no Portainer
 
-## 💡 Próximos Passos
+Duas formas, escolha uma:
 
-- [ ] Adicionar autenticação JWT
-- [ ] Implementar paginação avançada
-- [ ] Adicionar filtros e ordenação
-- [ ] Criar testes automatizados
-- [ ] Implementar cache com Redis
-- [ ] Adicionar validações mais robustas
-- [ ] Criar dashboard de analytics
-- [ ] Implementar backup automático
+### Opção A — Stack a partir do repositório Git (recomendado)
 
-## 📄 Licença
+1. No Portainer: **Stacks → Add stack → Repository**.
+2. Cole a URL do seu repositório GitHub e o caminho `docker-compose.yml` (raiz).
+3. Em **Environment variables**, cole o conteúdo do `.env.example` já preenchido
+   com valores reais (senhas, `JWT_SECRET`, etc).
+4. Deploy. O Portainer vai clonar o repo e buildar as três imagens (`db`, `server`, `client`)
+   direto no seu Docker host.
+5. Ative o **webhook** da stack (Portainer gera uma URL) e configure-o no GitHub
+   (`Settings → Webhooks` do repositório) para redeployar automaticamente a cada push.
 
-Este projeto é fornecido como está, livre para uso e modificação.
+### Opção B — Stack usando as imagens do GHCR (mais rápido, sem build no host)
 
-## 🤝 Suporte
+Troque no `docker-compose.yml` os blocos `build:` por `image:` apontando para o GHCR, por exemplo:
 
-Para dúvidas ou problemas:
+```yaml
+server:
+  image: ghcr.io/SEU-USUARIO/horas-adicionais-server:latest
+client:
+  image: ghcr.io/SEU-USUARIO/horas-adicionais-client:latest
+```
 
-1. Verificar os logs: `docker-compose logs -f`
-2. Consultar a documentação da API: http://localhost:8000/docs
-3. Revisar este README
+e cole esse compose diretamente em **Stacks → Add stack → Web editor** no Portainer.
 
-## ✨ Melhorias Futuras
+## Estrutura do projeto
 
-- Autenticação e autorização
-- Rate limiting
-- Caching
-- Testes unitários e de integração
-- CI/CD pipeline
-- Monitoring com Prometheus
-- Logging centralizado com ELK
-
----
-
-**Versão**: 1.0.0  
-**Última atualização**: 2024  
-**Desenvolvido com ❤️**
+```
+.
+├── client/           # Frontend React + Vite
+├── server/           # Backend Express + Drizzle
+├── docker-compose.yml
+└── .github/workflows/docker-publish.yml
+```

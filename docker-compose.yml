@@ -1,38 +1,49 @@
-version: '3.8'
+version: "3.9"
 
 services:
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: cadastro-backend
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://admin:Salcifufu@0412@10.0.0.13:5432/teste
-      DEBUG: false
-    ports:
-      - "8001:8000"
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-horas_adicionais}
     volumes:
-      - ./backend:/app
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-    restart: unless-stopped
-    networks:
-      - cadastro-network
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
-  frontend:
+  server:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: cadastro-frontend
-    ports:
-      - "3001:80"
-    depends_on:
-      - backend
-    volumes:
-      - ./frontend:/app
+      context: ./server
     restart: unless-stopped
-    networks:
-      - cadastro-network
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-horas_adicionais}
+      JWT_SECRET: ${JWT_SECRET:?defina JWT_SECRET no .env}
+      PORT: 4000
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost}
+      NODE_ENV: production
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@empresa.com.br}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-admin123}
+    expose:
+      - "4000"
 
-networks:
-  cadastro-network:
-    driver: bridge
+  client:
+    build:
+      context: ./client
+      args:
+        VITE_API_URL: /api
+    restart: unless-stopped
+    depends_on:
+      - server
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+
+volumes:
+  db_data:
